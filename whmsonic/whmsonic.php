@@ -14,6 +14,7 @@ class Whmsonic extends Module
      * @var string The version of this module
      */
     private static $version = '1.0.1';
+
     /**
      * @var string The authors of this module
      */
