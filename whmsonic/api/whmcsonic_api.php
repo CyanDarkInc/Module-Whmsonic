@@ -4,7 +4,7 @@
  *
  * @package blesta
  * @subpackage blesta.components.modules.whmsonic.whmsonicapi
- * @copyright Copyright (c) 2010, Phillips Data, Inc.
+ * @copyright Copyright (c) 2017, Phillips Data, Inc.
  * @license http://www.blesta.com/license/ The Blesta License Agreement
  * @see http://www.blesta.com/ Blesta
  */
@@ -31,7 +31,7 @@ class WhmsonicApi
     /**
      * Return a string containing the last error for the current session.
      *
-     * @param string $command the Vesta API command to call
+     * @param string $command the Whmsonic API command to call
      * @param array $params the parameters to include in the API request
      * @return mixed string|Array the curl error message or an array representing the API response
      */
@@ -91,8 +91,8 @@ class WhmsonicApi
         if (isset($params['username'])) {
             $parameters['rad_username'] = $params['username'];
         }
-        if (isset($params['pass'])) {
-            $parameters['pass'] = $params['pass'];
+        if (isset($params['radio_password'])) {
+            $parameters['pass'] = $params['radio_password'];
         }
         if (isset($params['bitrate'])) {
             $parameters['bitrate'] = $params['bitrate'];

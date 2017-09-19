@@ -4,7 +4,7 @@
  *
  * @package blesta
  * @subpackage blesta.components.modules.whmsonic
- * @copyright Copyright (c) 2010, Phillips Data, Inc.
+ * @copyright Copyright (c) 2017, Phillips Data, Inc.
  * @license http://www.blesta.com/license/ The Blesta License Agreement
  * @see http://www.blesta.com/ Blesta
  */
@@ -14,7 +14,6 @@ class Whmsonic extends Module
      * @var string The version of this module
      */
     private static $version = '1.0.1';
-
     /**
      * @var string The authors of this module
      */
@@ -65,26 +64,33 @@ class Whmsonic extends Module
 
     /**
      * Returns all tabs to display to an admin when managing a service whose
-     * package uses this module.
+     * package uses this module
      *
      * @param stdClass $package A stdClass object representing the selected package
-     * @return array An array of tabs in the format of method => title. Example: array('methodName' => "Title", 'methodName2' => "Title2")
+     * @return array An array of tabs in the format of method => title.
+     *  Example: ['methodName' => 'Title', 'methodName2' => 'Title2']
      */
     public function getAdminTabs($package)
     {
-        return [];
+        return [
+            'tabStats' => Language::_('Whmsonic.tab_stats', true)
+        ];
     }
 
     /**
      * Returns all tabs to display to a client when managing a service whose
-     * package uses this module.
+     * package uses this module
      *
      * @param stdClass $package A stdClass object representing the selected package
-     * @return array An array of tabs in the format of method => title. Example: array('methodName' => "Title", 'methodName2' => "Title2")
+     * @return array An array of tabs in the format of method => title.
+     *  Example: ['methodName' => 'Title', 'methodName2' => 'Title2']
      */
     public function getClientTabs($package)
     {
-        return [];
+        return [
+            'tabClientActions' => Language::_('Whmsonic.tab_client_actions', true),
+            'tabClientStats' => Language::_('Whmsonic.tab_stats', true)
+        ];
     }
 
     /**
@@ -133,7 +139,8 @@ class Whmsonic extends Module
      * may be implemented such that it returns the module row with the least number
      * of services assigned to it.
      *
-     * @return array An array of order methods in key/value paris where the key is the type to be stored for the group and value is the name for that option
+     * @return array An array of order methods in key/value paris where the key is the type
+     *  to be stored for the group and value is the name for that option
      * @see Module::selectModuleRow()
      */
     public function getGroupOrderOptions()
@@ -145,9 +152,8 @@ class Whmsonic extends Module
      * Determines which module row should be attempted when a service is provisioned
      * for the given group based upon the order method set for that group.
      *
-     * @see Module::getGroupOrderOptions()
-     * @param mixed $module_group_id
      * @return int The module row ID to attempt to add the service with
+     * @see Module::getGroupOrderOptions()
      */
     public function selectModuleRow($module_group_id)
     {
@@ -161,17 +167,13 @@ class Whmsonic extends Module
             switch ($group->add_order) {
                 default:
                 case 'first':
-
                     foreach ($group->rows as $row) {
-                        if ($row->meta->account_limit > (isset($row->meta->account_count) ? $row->meta->account_count : 0)) {
-                            return $row->id;
-                        }
+                        return $row->id;
                     }
 
                     break;
             }
         }
-
         return 0;
     }
 
@@ -180,7 +182,8 @@ class Whmsonic extends Module
      * javascript to execute when the page is rendered with these fields.
      *
      * @param $vars stdClass A stdClass object representing a set of post fields
-     * @return ModuleFields A ModuleFields object, containing the fields to render as well as any additional HTML markup to include
+     * @return ModuleFields A ModuleFields object, containing the fields to render as
+     *  well as any additional HTML markup to include
      */
     public function getPackageFields($vars = null)
     {
@@ -211,40 +214,100 @@ class Whmsonic extends Module
         }
 
         $client_type = $fields->label(Language::_('Whmsonic.package_fields.client_type', true), 'client_type');
-        $client_type->attach($fields->fieldSelect('meta[client_type]', [
-            'External' => Language::_('Whmsonic.package_fields.client_type.external', true),
-            'internal' => Language::_('Whmsonic.package_fields.client_type.internal', true),
-        ], $this->Html->ifSet($vars->meta['client_type'])), ['id' => 'client_type']);
+        $client_type->attach(
+            $fields->fieldSelect(
+                'meta[client_type]',
+                $this->getClientTypes(),
+                $this->Html->ifSet($vars->meta['client_type'])
+            ),
+            ['id' => 'client_type']
+        );
         $fields->setField($client_type);
 
         $bitrate = $fields->label(Language::_('Whmsonic.package_fields.bitrate', true), 'bitrate');
-        $bitrate->attach($fields->fieldSelect('meta[bitrate]', [
-            '32' => '32',
-            '64' => '64',
-            '128' => '128',
-        ], $this->Html->ifSet($vars->meta['bitrate'])), ['id' => 'bitrate']);
+        $bitrate->attach(
+            $fields->fieldSelect(
+                'meta[bitrate]',
+                $this->getBitRates(),
+                $this->Html->ifSet($vars->meta['bitrate'])
+            ),
+            ['id' => 'bitrate']
+        );
         $fields->setField($bitrate);
 
         $hspace = $fields->label(Language::_('Whmsonic.package_fields.hspace', true), 'hspace');
-        $hspace->attach($fields->fieldText('meta[hspace]', $this->Html->ifSet($vars->meta['hspace'])), ['id' => 'hspace']);
+        $hspace->attach(
+            $fields->fieldText('meta[hspace]', $this->Html->ifSet($vars->meta['hspace'])),
+            ['id' => 'hspace']
+        );
         $fields->setField($hspace);
 
         $bandwidth = $fields->label(Language::_('Whmsonic.package_fields.bandwidth', true), 'bandwidth');
-        $bandwidth->attach($fields->fieldText('meta[bandwidth]', $this->Html->ifSet($vars->meta['bandwidth'])), ['id' => 'bandwidth']);
+        $bandwidth->attach(
+            $fields->fieldText('meta[bandwidth]', $this->Html->ifSet($vars->meta['bandwidth'])),
+            ['id' => 'bandwidth']
+        );
         $fields->setField($bandwidth);
 
         $listeners = $fields->label(Language::_('Whmsonic.package_fields.listeners', true), 'listeners');
-        $listeners->attach($fields->fieldText('meta[listeners]', $this->Html->ifSet($vars->meta['listeners'])), ['id' => 'listeners']);
+        $listeners->attach(
+            $fields->fieldText('meta[listeners]', $this->Html->ifSet($vars->meta['listeners'])),
+            ['id' => 'listeners']
+        );
         $fields->setField($listeners);
 
         $autodj = $fields->label(Language::_('Whmsonic.package_fields.autodj', true), 'autodj');
-        $autodj->attach($fields->fieldSelect('meta[autodj]', [
-            'yes' => Language::_('Whmsonic.package_fields.autodj.yes', true),
-            'no' => Language::_('Whmsonic.package_fields.autodj.no', true),
-        ], $this->Html->ifSet($vars->meta['autodj'])), ['id' => 'autodj']);
+        $autodj->attach(
+            $fields->fieldSelect(
+                'meta[autodj]',
+                $this->getAutoDJAccessOptions(),
+                $this->Html->ifSet($vars->meta['autodj'])
+            ),
+            ['id' => 'autodj']
+        );
         $fields->setField($autodj);
 
         return $fields;
+    }
+
+    /**
+     * Retrieves a list of client types and language
+     *
+     * @return array A key/value array of client types and their language
+     */
+    private function getClientTypes()
+    {
+        return [
+            'External' => Language::_('Whmsonic.package_fields.client_type.external', true),
+            'internal' => Language::_('Whmsonic.package_fields.client_type.internal', true),
+        ];
+    }
+
+    /**
+     * Retrieves a list of bit rates and language
+     *
+     * @return array A key/value array of bit rates and their language
+     */
+    private function getBitRates()
+    {
+        return [
+            '32' => '32',
+            '64' => '64',
+            '128' => '128',
+        ];
+    }
+
+    /**
+     * Retrieves a list of AutoDJ options and language
+     *
+     * @return array A key/value array of options and their language
+     */
+    private function getAutoDJAccessOptions()
+    {
+        return [
+            'yes' => Language::_('Whmsonic.package_fields.autodj.yes', true),
+            'no' => Language::_('Whmsonic.package_fields.autodj.no', true),
+        ];
     }
 
     /**
@@ -252,7 +315,9 @@ class Whmsonic extends Module
      * and service under this module, used to substitute those keys with their
      * actual module, package, or service meta values in related emails.
      *
-     * @return array A multi-dimensional array of key/value pairs where each key is one of 'module', 'package', or 'service' and each value is a numerically indexed array of key values that match meta fields under that category.
+     * @return array A multi-dimensional array of key/value pairs where each key is one of 'module',
+     *  'package', or 'service' and each value is a numerically indexed array of key values that match
+     *   meta fields under that category.
      * @see Modules::addModuleRow()
      * @see Modules::editModuleRow()
      * @see Modules::addPackage()
@@ -265,7 +330,14 @@ class Whmsonic extends Module
         return [
             'module' => ['ip_address'],
             'package' => ['client_type', 'bitrate', 'hspace', 'bandwidth', 'listeners', 'autodj'],
-            'service' => ['whmsonic_username', 'whmsonic_password', 'whmsonic_ip_address', 'whmsonic_port', 'whmsonic_ftp', 'whmsonic_radio_ip', 'whmsonic_radio_password']
+            'service' => [
+                'whmsonic_username',
+                'whmsonic_password',
+                'whmsonic_ip_address',
+                'whmsonic_ftp',
+                'whmsonic_radio_ip',
+                'whmsonic_radio_password'
+            ]
         ];
     }
 
@@ -344,7 +416,8 @@ class Whmsonic extends Module
      * Returns the rendered view of the manage module page.
      *
      * @param mixed $module A stdClass object representing the module and its rows
-     * @param array $vars An array of post data submitted to or on the manager module page (used to repopulate fields after an error)
+     * @param array $vars An array of post data submitted to or on the manager module
+     *  page (used to repopulate fields after an error)
      * @return string HTML content containing information to display when viewing the manager module page
      */
     public function manageModule($module, array &$vars)
@@ -365,7 +438,8 @@ class Whmsonic extends Module
     /**
      * Returns the rendered view of the add module row page.
      *
-     * @param array $vars An array of post data submitted to or on the add module row page (used to repopulate fields after an error)
+     * @param array $vars An array of post data submitted to or on the add module
+     *  row page (used to repopulate fields after an error)
      * @return string HTML content containing information to display when viewing the add module row page
      */
     public function manageAddRow(array &$vars)
@@ -394,7 +468,8 @@ class Whmsonic extends Module
      * Returns the rendered view of the edit module row page.
      *
      * @param stdClass $module_row The stdClass representation of the existing module row
-     * @param array $vars An array of post data submitted to or on the edit module row page (used to repopulate fields after an error)
+     * @param array $vars An array of post data submitted to or on the edit module
+     *  row page (used to repopulate fields after an error)
      * @return string HTML content containing information to display when viewing the edit module row page
      */
     public function manageEditRow($module_row, array &$vars)
@@ -485,6 +560,8 @@ class Whmsonic extends Module
             $vars['use_ssl'] = 'false';
         }
 
+        $this->Input->setRules($this->getRowRules($vars));
+
         // Validate module row
         if ($this->Input->validates($vars)) {
             // Build the meta data for this row
@@ -501,16 +578,6 @@ class Whmsonic extends Module
 
             return $meta;
         }
-    }
-
-    /**
-     * Deletes the module row on the remote server. Sets Input errors on failure,
-     * preventing the row from being deleted.
-     *
-     * @param stdClass $module_row The stdClass representation of the existing module row
-     */
-    public function deleteModuleRow($module_row)
-    {
     }
 
     /**
@@ -554,7 +621,8 @@ class Whmsonic extends Module
      *
      * @param stdClass $package A stdClass object representing the selected package
      * @param $vars stdClass A stdClass object representing a set of post fields
-     * @return ModuleFields A ModuleFields object, containg the fields to render as well as any additional HTML markup to include
+     * @return ModuleFields A ModuleFields object, containg the fields to render as well
+     *  as any additional HTML markup to include
      */
     public function getAdminAddFields($package, $vars = null)
     {
@@ -564,8 +632,18 @@ class Whmsonic extends Module
 
         if ($package->meta->client_type == 'internal') {
             $username = $fields->label(Language::_('Whmsonic.service_field.cpanel_username', true), 'username');
-            $username->attach($fields->fieldText('username', $this->Html->ifSet($vars->username, $this->Html->ifSet($vars->username)), ['id' => 'username']));
+            $username->attach(
+                $fields->fieldText(
+                    'username',
+                    $this->Html->ifSet($vars->username),
+                    ['id' => 'username']
+                )
+            );
             $fields->setField($username);
+
+            $password = $fields->label(Language::_('Whmsonic.service_field.password', true), 'password');
+            $password->attach($fields->fieldPassword('password', ['id' => 'password']));
+            $fields->setField($password);
         }
 
         return $fields;
@@ -576,7 +654,8 @@ class Whmsonic extends Module
      *
      * @param stdClass $package A stdClass object representing the selected package
      * @param $vars stdClass A stdClass object representing a set of post fields
-     * @return ModuleFields A ModuleFields object, containg the fields to render as well as any additional HTML markup to include
+     * @return ModuleFields A ModuleFields object, containg the fields to render as well as
+     *  any additional HTML markup to include
      */
     public function getClientAddFields($package, $vars = null)
     {
@@ -586,8 +665,18 @@ class Whmsonic extends Module
 
         if ($package->meta->client_type == 'internal') {
             $username = $fields->label(Language::_('Whmsonic.service_field.cpanel_username', true), 'username');
-            $username->attach($fields->fieldText('username', $this->Html->ifSet($vars->username, $this->Html->ifSet($vars->username)), ['id' => 'username']));
+            $username->attach(
+                $fields->fieldText(
+                    'username',
+                    $this->Html->ifSet($vars->username),
+                    ['id' => 'username']
+                )
+            );
             $fields->setField($username);
+
+            $password = $fields->label(Language::_('Whmsonic.service_field.password', true), 'password');
+            $password->attach($fields->fieldPassword('password', ['id' => 'password']));
+            $fields->setField($password);
         }
 
         return $fields;
@@ -598,7 +687,8 @@ class Whmsonic extends Module
      *
      * @param stdClass $package A stdClass object representing the selected package
      * @param $vars stdClass A stdClass object representing a set of post fields
-     * @return ModuleFields A ModuleFields object, containg the fields to render as well as any additional HTML markup to include
+     * @return ModuleFields A ModuleFields object, containg the fields to render as well
+     *  as any additional HTML markup to include
      */
     public function getAdminEditFields($package, $vars = null)
     {
@@ -607,9 +697,23 @@ class Whmsonic extends Module
         $fields = new ModuleFields();
 
         $username = $fields->label(Language::_('Whmsonic.service_field.username', true), 'username');
-        $username->attach($fields->fieldText('username', $this->Html->ifSet($vars->username, $this->Html->ifSet($vars->username)), ['id' => 'username']));
+        $username->attach(
+            $fields->fieldText(
+                'username',
+                $this->Html->ifSet($vars->username),
+                ['id' => 'username']
+            )
+        );
         $username->attach($fields->tooltip(Language::_('Whmsonic.service_field.username.tooltip', true)));
         $fields->setField($username);
+
+        $radio_password = $fields->label(
+            Language::_('Whmsonic.service_field.radio_password', true),
+            'radio_password'
+        );
+        $radio_password->attach($fields->fieldPassword('radio_password', ['id' => 'radio_password']));
+        $radio_password->attach($fields->tooltip(Language::_('Whmsonic.service_field.password.tooltip', true)));
+        $fields->setField($radio_password);
 
         $password = $fields->label(Language::_('Whmsonic.service_field.password', true), 'password');
         $password->attach($fields->fieldPassword('password', ['id' => 'password']));
@@ -656,8 +760,11 @@ class Whmsonic extends Module
      *
      * @param stdClass $package A stdClass object representing the selected package
      * @param array $vars An array of user supplied info to satisfy the request
-     * @param stdClass $parent_package A stdClass object representing the parent service's selected package (if the current service is an addon service)
-     * @param stdClass $parent_service A stdClass object representing the parent service of the service being added (if the current service is an addon service service and parent service has already been provisioned)
+     * @param stdClass $parent_package A stdClass object representing the parent service's
+     *  selected package (if the current service is an addon service)
+     * @param stdClass $parent_service A stdClass object representing the parent service of
+     *  the service being added (if the current service is an addon service service and parent
+     *  service has already been provisioned)
      * @param string $status The status of the service being added. These include:
      *    - active
      *    - canceled
@@ -670,13 +777,20 @@ class Whmsonic extends Module
      * @see Module::getModule()
      * @see Module::getModuleRow()
      */
-    public function addService($package, array $vars = null, $parent_package = null, $parent_service = null, $status = 'pending')
-    {
+    public function addService(
+        $package,
+        array $vars = null,
+        $parent_package = null,
+        $parent_service = null,
+        $status = 'pending'
+    ) {
         $row = $this->getModuleRow();
         $params = [];
 
         if (!$row) {
-            $this->Input->setErrors(['module_row' => ['missing' => Language::_('Whmsonic.!error.module_row.missing', true)]]);
+            $this->Input->setErrors(
+                ['module_row' => ['missing' => Language::_('Whmsonic.!error.module_row.missing', true)]]
+            );
 
             return;
         }
@@ -689,11 +803,11 @@ class Whmsonic extends Module
         }
 
         if ($package->meta->client_type == 'internal') {
-            $params['username'] = isset($vars['username']) && !empty($vars['username']) ? $vars['username'] : null;
+            $params['username'] = !empty($vars['username']) ? $vars['username'] : null;
         } else {
             $params['username'] = $this->generateUsername($client->first_name . $client->last_name);
-            $params['pass'] = $this->generatePassword(10, 14);
         }
+        $params['radio_password'] = $this->generatePassword(10, 14);
 
         $params['bitrate'] = $package->meta->bitrate;
         $params['hspace'] = $package->meta->hspace;
@@ -707,11 +821,14 @@ class Whmsonic extends Module
             return;
         }
 
+        $api = $this->getApi($row->meta->password, $row->meta->ip_address, $row->meta->use_ssl);
         // Only provision the service if 'use_module' is true
         if ($vars['use_module'] == 'true') {
-            $api = $this->getApi($row->meta->password, $row->meta->ip_address, $row->meta->use_ssl);
 
-            $this->log($row->meta->ip_address . '|create', serialize($params), 'input');
+            $masked_params = $params;
+            $masked_params['radio_password'] = '***';
+
+            $this->log($row->meta->ip_address . '|create', serialize($masked_params), 'input', true);
             $response = $this->parseResponse($api->createRadio($params, $package->meta->client_type));
 
             if ($this->Input->errors()) {
@@ -728,7 +845,7 @@ class Whmsonic extends Module
             ],
             [
                 'key' => 'whmsonic_password',
-                'value' => $params['pass'],
+                'value' => !empty($vars['password']) ? $vars['password'] : $params['radio_password'],
                 'encrypted' => 1
             ],
             [
@@ -737,13 +854,12 @@ class Whmsonic extends Module
                 'encrypted' => 0
             ],
             [
-                'key' => 'whmsonic_port',
-                'value' => ($row->meta->use_ssl ? '2083' : '2082'),
-                'encrypted' => 0
-            ],
-            [
                 'key' => 'whmsonic_ftp',
-                'value' => $api->ftpAccountPermissions($row->meta->ip_address, $params['username'], $params['pass']),
+                'value' => $api->ftpAccountPermissions(
+                    $row->meta->ip_address,
+                    $params['username'],
+                    !empty($vars['password']) ? $vars['password'] : $params['radio_password']
+                ),
                 'encrypted' => 0
             ],
             [
@@ -753,7 +869,7 @@ class Whmsonic extends Module
             ],
             [
                 'key' => 'whmsonic_radio_password',
-                'value' => $params['pass'],
+                'value' => $params['radio_password'],
                 'encrypted' => 1
             ]
         ];
@@ -766,8 +882,10 @@ class Whmsonic extends Module
      * @param stdClass $package A stdClass object representing the current package
      * @param stdClass $service A stdClass object representing the current service
      * @param array $vars An array of user supplied info to satisfy the request
-     * @param stdClass $parent_package A stdClass object representing the parent service's selected package (if the current service is an addon service)
-     * @param stdClass $parent_service A stdClass object representing the parent service of the service being edited (if the current service is an addon service)
+     * @param stdClass $parent_package A stdClass object representing the parent service's selected
+     *  package (if the current service is an addon service)
+     * @param stdClass $parent_service A stdClass object representing the parent service of the
+     *  service being edited (if the current service is an addon service)
      * @return array A numerically indexed array of meta fields to be stored for this service containing:
      *    - key The key for this meta field
      *    - value The value for this key
@@ -777,7 +895,6 @@ class Whmsonic extends Module
      */
     public function editService($package, $service, array $vars = null, $parent_package = null, $parent_service = null)
     {
-        $row = $this->getModuleRow();
         $this->serviceValidation($package, $vars, true);
 
         if ($this->Input->errors()) {
@@ -792,11 +909,16 @@ class Whmsonic extends Module
         $vars['bandwidth'] = $package->meta->bandwidth;
         $vars['listeners'] = $package->meta->listeners;
 
-        if (empty($vars['username']) || $service_fields->whmsonic_username == $vars['username']) {
+        if (empty($vars['username'])) {
             $vars['username'] = $service_fields->whmsonic_username;
         }
-        if (empty($vars['password']) || $service_fields->whmsonic_password == $vars['password']) {
+
+        if (empty($vars['password'])) {
             $vars['password'] = $service_fields->whmsonic_password;
+        }
+
+        if (empty($vars['radio_password'])) {
+            $vars['radio_password'] = $service_fields->whmsonic_radio_password;
         }
 
         // Return service fields
@@ -808,17 +930,12 @@ class Whmsonic extends Module
             ],
             [
                 'key' => 'whmsonic_password',
-                'value' => $vars['pass'],
+                'value' => $vars['password'],
                 'encrypted' => 1
             ],
             [
                 'key' => 'whmsonic_ip_address',
                 'value' => $service_fields->whmsonic_ip_address,
-                'encrypted' => 0
-            ],
-            [
-                'key' => 'whmsonic_port',
-                'value' => $service_fields->whmsonic_port,
                 'encrypted' => 0
             ],
             [
@@ -833,7 +950,7 @@ class Whmsonic extends Module
             ],
             [
                 'key' => 'whmsonic_radio_password',
-                'value' => $service_fields->whmsonic_radio_password,
+                'value' => $vars['radio_password'],
                 'encrypted' => 1
             ]
         ];
@@ -845,9 +962,12 @@ class Whmsonic extends Module
      *
      * @param stdClass $package A stdClass object representing the current package
      * @param stdClass $service A stdClass object representing the current service
-     * @param stdClass $parent_package A stdClass object representing the parent service's selected package (if the current service is an addon service)
-     * @param stdClass $parent_service A stdClass object representing the parent service of the service being suspended (if the current service is an addon service)
-     * @return mixed null to maintain the existing meta fields or a numerically indexed array of meta fields to be stored for this service containing:
+     * @param stdClass $parent_package A stdClass object representing the parent service's
+     *  selected package (if the current service is an addon service)
+     * @param stdClass $parent_service A stdClass object representing the parent service of
+     *  the service being suspended (if the current service is an addon service)
+     * @return mixed null to maintain the existing meta fields or a numerically indexed array of
+     *  meta fields to be stored for this service containing:
      *    - key The key for this meta field
      *    - value The value for this key
      *    - encrypted Whether or not this field should be encrypted (default 0, not encrypted)
@@ -861,14 +981,18 @@ class Whmsonic extends Module
 
             $api = $this->getApi($row->meta->password, $row->meta->ip_address, $row->meta->use_ssl);
 
+            $this->log(
+                $row->meta->ip_address . '|suspend',
+                serialize($service_fields->whmsonic_username),
+                'input',
+                true
+            );
             $response = $api->suspendRadio($service_fields->whmsonic_username);
-            $this->log($row->meta->ip_address . '|suspend', serialize($response), 'input', $response['status']);
+            $this->log($row->meta->ip_address . '|suspend', serialize($response), 'output', $response['status']);
 
-            // if fails then set an error
-            if ($response['status'] == false) {
-                $this->Input->setErrors(['api_response' => ['missing' => Language::_('Whmsonic.!error.api.internal', true)]]);
-
-                return;
+            // If the action fails then set an error
+            if (!$response['status']) {
+                $this->Input->setErrors(['api' => ['error' => Language::_('Whmsonic.!error.api.internal', true)]]);
             }
         }
 
@@ -881,9 +1005,12 @@ class Whmsonic extends Module
      *
      * @param stdClass $package A stdClass object representing the current package
      * @param stdClass $service A stdClass object representing the current service
-     * @param stdClass $parent_package A stdClass object representing the parent service's selected package (if the current service is an addon service)
-     * @param stdClass $parent_service A stdClass object representing the parent service of the service being unsuspended (if the current service is an addon service)
-     * @return mixed null to maintain the existing meta fields or a numerically indexed array of meta fields to be stored for this service containing:
+     * @param stdClass $parent_package A stdClass object representing the parent service's
+     *  selected package (if the current service is an addon service)
+     * @param stdClass $parent_service A stdClass object representing the parent service of
+     *  the service being unsuspended (if the current service is an addon service)
+     * @return mixed null to maintain the existing meta fields or a numerically indexed array
+     *  of meta fields to be stored for this service containing:
      *    - key The key for this meta field
      *    - value The value for this key
      *    - encrypted Whether or not this field should be encrypted (default 0, not encrypted)
@@ -897,14 +1024,18 @@ class Whmsonic extends Module
 
             $api = $this->getApi($row->meta->password, $row->meta->ip_address, $row->meta->use_ssl);
 
+            $this->log(
+                $row->meta->ip_address . '|unsuspend',
+                serialize($service_fields->whmsonic_username),
+                'output',
+                $response['status']
+            );
             $response = $api->unSuspendRadio($service_fields->whmsonic_username);
-            $this->log($row->meta->ip_address . '|unsuspend', serialize($response), 'input', $response['status']);
+            $this->log($row->meta->ip_address . '|unsuspend', serialize($response), 'output', $response['status']);
 
-            // if fails then set an error
-            if ($response['status'] == false) {
-                $this->Input->setErrors(['api_response' => ['missing' => Language::_('Whmsonic.!error.api.internal', true)]]);
-
-                return;
+            // If the action fails then set an error
+            if (!$response['status']) {
+                $this->Input->setErrors(['api' => ['error' => Language::_('Whmsonic.!error.api.internal', true)]]);
             }
         }
 
@@ -917,9 +1048,12 @@ class Whmsonic extends Module
      *
      * @param stdClass $package A stdClass object representing the current package
      * @param stdClass $service A stdClass object representing the current service
-     * @param stdClass $parent_package A stdClass object representing the parent service's selected package (if the current service is an addon service)
-     * @param stdClass $parent_service A stdClass object representing the parent service of the service being canceled (if the current service is an addon service)
-     * @return mixed null to maintain the existing meta fields or a numerically indexed array of meta fields to be stored for this service containing:
+     * @param stdClass $parent_package A stdClass object representing the parent service's
+     *  selected package (if the current service is an addon service)
+     * @param stdClass $parent_service A stdClass object representing the parent service of
+     *  the service being canceled (if the current service is an addon service)
+     * @return mixed null to maintain the existing meta fields or a numerically indexed
+     *  array of meta fields to be stored for this service containing:
      *    - key The key for this meta field
      *    - value The value for this key
      *    - encrypted Whether or not this field should be encrypted (default 0, not encrypted)
@@ -933,38 +1067,21 @@ class Whmsonic extends Module
 
             $api = $this->getApi($row->meta->password, $row->meta->ip_address, $row->meta->use_ssl);
 
+            $this->log(
+                $row->meta->ip_address . '|terminate',
+                serialize([$service_fields->whmsonic_username]),
+                'input',
+                true
+            );
             $response = $api->terminateRadio($service_fields->whmsonic_username);
-            $this->log($row->meta->ip_address . '|terminate', serialize($response), 'input', $response['status']);
+            $this->log($row->meta->ip_address . '|terminate', serialize($response), 'output', $response['status']);
 
-            // if fails then set an error
-            if ($response['status'] == false) {
-                $this->Input->setErrors(['api_response' => ['missing' => Language::_('Whmsonic.!error.api.internal', true)]]);
-
-                return;
+            // If the action fails then set an error
+            if (!$response['status']) {
+                $this->Input->setErrors(['api' => ['error' => Language::_('Whmsonic.!error.api.internal', true)]]);
             }
         }
 
-        return null;
-    }
-
-    /**
-     * Updates the package for the service on the remote server. Sets Input
-     * errors on failure, preventing the service's package from being changed.
-     *
-     * @param stdClass $package_from A stdClass object representing the current package
-     * @param stdClass $package_to A stdClass object representing the new package
-     * @param stdClass $service A stdClass object representing the current service
-     * @param stdClass $parent_package A stdClass object representing the parent service's selected package (if the current service is an addon service)
-     * @param stdClass $parent_service A stdClass object representing the parent service of the service being changed (if the current service is an addon service)
-     * @return mixed null to maintain the existing meta fields or a numerically indexed array of meta fields to be stored for this service containing:
-     *    - key The key for this meta field
-     *    - value The value for this key
-     *    - encrypted Whether or not this field should be encrypted (default 0, not encrypted)
-     * @see Module::getModule()
-     * @see Module::getModuleRow()
-     */
-    public function changeServicePackage($package_from, $package_to, $service, $parent_package = null, $parent_service = null)
-    {
         return null;
     }
 
@@ -1025,6 +1142,127 @@ class Whmsonic extends Module
     }
 
     /**
+     * Client Actions (reset password)
+     *
+     * @param stdClass $package A stdClass object representing the current package
+     * @param stdClass $service A stdClass object representing the current service
+     * @param array $get Any GET parameters
+     * @param array $post Any POST parameters
+     * @param array $files Any FILES parameters
+     * @return string The string representing the contents of this tab
+     */
+    public function tabClientActions($package, $service, array $get = null, array $post = null, array $files = null)
+    {
+        $this->view = new View('tab_client_actions', 'default');
+        $this->view->base_uri = $this->base_uri;
+        // Load the helpers required for this view
+        Loader::loadHelpers($this, ['Form', 'Html']);
+
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+
+        // Perform the password reset
+        if (!empty($post)) {
+            Loader::loadModels($this, ['Services']);
+            $data = [
+                'password' => $this->Html->ifSet($post['password']),
+                'radio_password' => $this->Html->ifSet($post['radio_password'])
+            ];
+            $this->Services->edit($service->id, $data);
+
+            if ($this->Services->errors()) {
+                $this->Input->setErrors($this->Services->errors());
+            }
+
+            $vars = (object)$post;
+        }
+
+        $this->view->set('service_fields', $service_fields);
+        $this->view->set('service_id', $service->id);
+        $this->view->set('vars', (isset($vars) ? $vars : new stdClass()));
+
+        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'whmsonic' . DS);
+        return $this->view->fetch();
+    }
+
+    /**
+     * Client Statistics tab
+     *
+     * @param stdClass $package A stdClass object representing the current package
+     * @param stdClass $service A stdClass object representing the current service
+     * @param array $get Any GET parameters
+     * @param array $post Any POST parameters
+     * @param array $files Any FILES parameters
+     * @return string The string representing the contents of this tab
+     */
+    public function tabClientStats($package, $service, array $get = null, array $post = null, array $files = null)
+    {
+        $this->view = new View('tab_client_stats', 'default');
+        $this->view->base_uri = $this->base_uri;
+        // Load the helpers required for this view
+        Loader::loadHelpers($this, ['Form', 'Html']);
+
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+
+
+        $display_fields = [
+            'bitrate' => $this->getBitRates(),
+            'autodj' => $this->getAutoDJAccessOptions(),
+            'client_type' => $this->getClientTypes()
+        ];
+
+        foreach ($display_fields as $display_field => $options) {
+            if (isset($package->meta->{$display_field}) && isset($options[$package->meta->{$display_field}])) {
+                $package->meta->{$display_field} = $options[$package->meta->{$display_field}];
+            }
+        }
+
+        $this->view->set('package_fields', $package->meta);
+        $this->view->set('service_fields', $service_fields);
+
+        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'whmsonic' . DS);
+        return $this->view->fetch();
+    }
+
+    /**
+     * Statistics tab
+     *
+     * @param stdClass $package A stdClass object representing the current package
+     * @param stdClass $service A stdClass object representing the current service
+     * @param array $get Any GET parameters
+     * @param array $post Any POST parameters
+     * @param array $files Any FILES parameters
+     * @return string The string representing the contents of this tab
+     */
+    public function tabStats($package, $service, array $get = null, array $post = null, array $files = null)
+    {
+        $this->view = new View('tab_stats', 'default');
+        $this->view->base_uri = $this->base_uri;
+        // Load the helpers required for this view
+        Loader::loadHelpers($this, ['Form', 'Html']);
+
+        $service_fields = $this->serviceFieldsToObject($service->fields);
+
+
+        $display_fields = [
+            'bitrate' => $this->getBitRates(),
+            'autodj' => $this->getAutoDJAccessOptions(),
+            'client_type' => $this->getClientTypes()
+        ];
+
+        foreach ($display_fields as $display_field => $options) {
+            if (isset($package->meta->{$display_field}) && isset($options[$package->meta->{$display_field}])) {
+                $package->meta->{$display_field} = $options[$package->meta->{$display_field}];
+            }
+        }
+
+        $this->view->set('package_fields', $package->meta);
+        $this->view->set('service_fields', $service_fields);
+
+        $this->view->setDefaultView('components' . DS . 'modules' . DS . 'whmsonic' . DS);
+        return $this->view->fetch();
+    }
+
+    /**
      * Validates that the given hostname is valid.
      *
      * @param string $host_name The host name to validate
@@ -1036,7 +1274,10 @@ class Whmsonic extends Module
             return false;
         }
 
-        return $this->Input->matches($host_name, "/^([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9]))+$/");
+        return $this->Input->matches(
+            $host_name,
+            '/^([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9]))+$/'
+        );
     }
 
     /**
@@ -1061,16 +1302,23 @@ class Whmsonic extends Module
     }
 
     /**
-     * Generates random username.
+     * Generates mostly random username partially based on the client's name.
      *
-     * @param mixed $name
-     * @return string The username generated from the given hostname
+     * @param mixed $name The client's name
+     * @return string The username generated from the given client name
      */
     private function generateUsername($name)
     {
-        $pool = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()';
-        srand((float) microtime() * 1000000);
-        $username = substr(str_replace(' ', '', strtolower($name)), 0, 2) . $pool[(rand(0, 35))] . $pool[(rand(0, 35))];
+        // Use the first two characters if the name
+        $username = substr(str_replace(' ', '', strtolower($name)), 0, 2);
+        $length = strlen($username);
+
+        $pool = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        $pool_size = strlen($pool);
+
+        for ($i = $length; $i < 8; $i++) {
+            $username .= substr($pool, mt_rand(0, $pool_size - 1), 1);
+        }
 
         return 'sc_' . $username;
     }
@@ -1108,7 +1356,7 @@ class Whmsonic extends Module
      * @param string $password The whmsonic password
      * @param string $ip_address The ip address of the server
      * @param bool $use_ssl Whether to use https or http
-     * @return Whmsonicapi the Whmsonicapi instance, or false if the loader fails to load the file
+     * @return WhmsonicApi the WhmsonicApi instance, or false if the loader fails to load the file
      */
     private function getApi($password, $ip_address, $use_ssl)
     {
@@ -1136,7 +1384,7 @@ class Whmsonic extends Module
             'ip_address' => [
                 'valid' => [
                     'rule' => [[$this, 'validateHostName']],
-                    'message' => Language::_('Whmsonic.!error.host_name_valid', true)
+                    'message' => Language::_('Whmsonic.!error.ip_address_valid', true)
                 ]
             ],
             'password' => [
@@ -1144,8 +1392,16 @@ class Whmsonic extends Module
                     'rule' => 'isEmpty',
                     'negate' => true,
                     'message' => Language::_('Whmsonic.!error.password_valid', true)
+                ],
+                'valid_connection' => [
+                    'rule' => [
+                        [$this, 'validateConnection'],
+                        isset($vars['ip_address']) ? $vars['ip_address'] : '',
+                        isset($vars['use_ssl']) ? $vars['use_ssl'] : 'false'
+                    ],
+                    'message' => Language::_('Whmsonic.!error.api.internal', true)
                 ]
-            ],
+            ]
         ];
 
         return $rules;
@@ -1154,24 +1410,21 @@ class Whmsonic extends Module
     /**
      * Builds and returns rules required to be validated when adding/editing a package.
      *
-     * @param array $vars An array of key/value data pairs
      * @return array An array of Input rules suitable for Input::setRules()
      */
-    private function getPackageRules($vars)
+    private function getPackageRules()
     {
         $rules = [
             'meta[client_type]' => [
-                'empty' => [
-                    'rule' => 'isEmpty',
-                    'negate' => true,
-                    'message' => Language::_('Whmsonic.!error.meta[client_type].empty', true)
+                'valid' => [
+                    'rule' => ['in_array', array_keys($this->getClientTypes())],
+                    'message' => Language::_('Whmsonic.!error.meta[client_type].valid', true)
                 ]
             ],
             'meta[bitrate]' => [
-                'empty' => [
-                    'rule' => 'isEmpty',
-                    'negate' => true,
-                    'message' => Language::_('Whmsonic.!error.meta[bitrate].empty', true)
+                'valid' => [
+                    'rule' => ['in_array', array_keys($this->getBitRates())],
+                    'message' => Language::_('Whmsonic.!error.meta[bitrate].valid', true)
                 ]
             ],
             'meta[hspace]' => [
@@ -1195,8 +1448,38 @@ class Whmsonic extends Module
                     'message' => Language::_('Whmsonic.!error.meta[listeners].empty', true)
                 ]
             ],
+            'meta[autodj]' => [
+                'valid' => [
+                    'rule' => ['in_array', array_keys($this->getAutoDJAccessOptions())],
+                    'message' => Language::_('Whmsonic.!error.meta[autodj].valid', true)
+                ]
+            ],
         ];
 
         return $rules;
+    }
+
+    /**
+     * Validates whether or not the connection details are valid by attempting to terminate a non-existent radio
+     *
+     * @return bool True if the connection is valid, false otherwise
+     */
+    public function validateConnection($password, $ip_address, $use_ssl)
+    {
+        try {
+            $api = $this->getApi($password, $ip_address, $use_ssl);
+
+            // Test connection by terminating a non-existent radio
+            $result = $api->terminateRadio(['_#$%^3456#$%^#456[{g']);
+
+            // Log the response
+            $success = (isset($result['status']) && $result['status'] == true);
+            $this->log($ip_address, serialize($result), 'output', $success);
+
+            return $success;
+        } catch (Exception $e) {
+            // Trap any errors encountered, could not validate connection
+        }
+        return false;
     }
 }
