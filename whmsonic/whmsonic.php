@@ -64,7 +64,7 @@ class Whmsonic extends Module
 
     /**
      * Returns all tabs to display to an admin when managing a service whose
-     * package uses this module
+     * package uses this module.
      *
      * @param stdClass $package A stdClass object representing the selected package
      * @return array An array of tabs in the format of method => title.
@@ -79,7 +79,7 @@ class Whmsonic extends Module
 
     /**
      * Returns all tabs to display to a client when managing a service whose
-     * package uses this module
+     * package uses this module.
      *
      * @param stdClass $package A stdClass object representing the selected package
      * @return array An array of tabs in the format of method => title.
@@ -152,8 +152,9 @@ class Whmsonic extends Module
      * Determines which module row should be attempted when a service is provisioned
      * for the given group based upon the order method set for that group.
      *
-     * @return int The module row ID to attempt to add the service with
      * @see Module::getGroupOrderOptions()
+     * @param mixed $module_group_id
+     * @return int The module row ID to attempt to add the service with
      */
     public function selectModuleRow($module_group_id)
     {
@@ -174,6 +175,7 @@ class Whmsonic extends Module
                     break;
             }
         }
+
         return 0;
     }
 
@@ -271,7 +273,7 @@ class Whmsonic extends Module
     }
 
     /**
-     * Retrieves a list of client types and language
+     * Retrieves a list of client types and language.
      *
      * @return array A key/value array of client types and their language
      */
@@ -284,7 +286,7 @@ class Whmsonic extends Module
     }
 
     /**
-     * Retrieves a list of bit rates and language
+     * Retrieves a list of bit rates and language.
      *
      * @return array A key/value array of bit rates and their language
      */
@@ -298,7 +300,7 @@ class Whmsonic extends Module
     }
 
     /**
-     * Retrieves a list of AutoDJ options and language
+     * Retrieves a list of AutoDJ options and language.
      *
      * @return array A key/value array of options and their language
      */
@@ -824,7 +826,6 @@ class Whmsonic extends Module
         $api = $this->getApi($row->meta->password, $row->meta->ip_address, $row->meta->use_ssl);
         // Only provision the service if 'use_module' is true
         if ($vars['use_module'] == 'true') {
-
             $masked_params = $params;
             $masked_params['radio_password'] = '***';
 
@@ -1142,7 +1143,7 @@ class Whmsonic extends Module
     }
 
     /**
-     * Client Actions (reset password)
+     * Client Actions (reset password).
      *
      * @param stdClass $package A stdClass object representing the current package
      * @param stdClass $service A stdClass object representing the current service
@@ -1173,7 +1174,7 @@ class Whmsonic extends Module
                 $this->Input->setErrors($this->Services->errors());
             }
 
-            $vars = (object)$post;
+            $vars = (object) $post;
         }
 
         $this->view->set('service_fields', $service_fields);
@@ -1181,11 +1182,12 @@ class Whmsonic extends Module
         $this->view->set('vars', (isset($vars) ? $vars : new stdClass()));
 
         $this->view->setDefaultView('components' . DS . 'modules' . DS . 'whmsonic' . DS);
+
         return $this->view->fetch();
     }
 
     /**
-     * Client Statistics tab
+     * Client Statistics tab.
      *
      * @param stdClass $package A stdClass object representing the current package
      * @param stdClass $service A stdClass object representing the current service
@@ -1203,7 +1205,6 @@ class Whmsonic extends Module
 
         $service_fields = $this->serviceFieldsToObject($service->fields);
 
-
         $display_fields = [
             'bitrate' => $this->getBitRates(),
             'autodj' => $this->getAutoDJAccessOptions(),
@@ -1220,11 +1221,12 @@ class Whmsonic extends Module
         $this->view->set('service_fields', $service_fields);
 
         $this->view->setDefaultView('components' . DS . 'modules' . DS . 'whmsonic' . DS);
+
         return $this->view->fetch();
     }
 
     /**
-     * Statistics tab
+     * Statistics tab.
      *
      * @param stdClass $package A stdClass object representing the current package
      * @param stdClass $service A stdClass object representing the current service
@@ -1242,7 +1244,6 @@ class Whmsonic extends Module
 
         $service_fields = $this->serviceFieldsToObject($service->fields);
 
-
         $display_fields = [
             'bitrate' => $this->getBitRates(),
             'autodj' => $this->getAutoDJAccessOptions(),
@@ -1259,6 +1260,7 @@ class Whmsonic extends Module
         $this->view->set('service_fields', $service_fields);
 
         $this->view->setDefaultView('components' . DS . 'modules' . DS . 'whmsonic' . DS);
+
         return $this->view->fetch();
     }
 
@@ -1460,8 +1462,11 @@ class Whmsonic extends Module
     }
 
     /**
-     * Validates whether or not the connection details are valid by attempting to terminate a non-existent radio
+     * Validates whether or not the connection details are valid by attempting to terminate a non-existent radio.
      *
+     * @param mixed $password
+     * @param mixed $ip_address
+     * @param mixed $use_ssl
      * @return bool True if the connection is valid, false otherwise
      */
     public function validateConnection($password, $ip_address, $use_ssl)
@@ -1480,6 +1485,7 @@ class Whmsonic extends Module
         } catch (Exception $e) {
             // Trap any errors encountered, could not validate connection
         }
+
         return false;
     }
 }

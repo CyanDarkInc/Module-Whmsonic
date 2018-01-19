@@ -8,7 +8,7 @@
             $this->Form->create();
             ?>
             <div class="title_row first">
-                <h3><?php $this->_('Whmsonic.edit_row.basic_title');?></h3>
+                <h3><?php $this->_('Whmsonic.edit_row.basic_title'); ?></h3>
             </div>
             <div class="pad">
                 <ul>
@@ -40,7 +40,7 @@
             </div>
 
 
-            <div class="button_row"><a class="btn btn-primary pull-right submit" href="#"><?php $this->_('Whmsonic.edit_row.add_btn');?></a></div>
+            <div class="button_row"><a class="btn btn-primary pull-right submit" href="#"><?php $this->_('Whmsonic.edit_row.add_btn'); ?></a></div>
             <?php
             $this->Form->end();
             ?>
