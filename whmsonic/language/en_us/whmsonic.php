@@ -27,9 +27,9 @@ $lang['Whmsonic.tab_stats.info.whmsonic_radio_ip'] = 'Radio IP';
 $lang['Whmsonic.tab_stats.info.whmsonic_radio_password'] = 'Radio Password';
 
 // Tab Actions
-$lang['Whmsonic.tab_client_actions.change_password'] = "Change Passwords";
-$lang['Whmsonic.tab_client_actions.password'] = "cPanel Password";
-$lang['Whmsonic.tab_client_actions.radio_password'] = "Radio Password";
+$lang['Whmsonic.tab_client_actions.change_password'] = 'Change Passwords';
+$lang['Whmsonic.tab_client_actions.password'] = 'cPanel Password';
+$lang['Whmsonic.tab_client_actions.radio_password'] = 'Radio Password';
 
 // Module management
 $lang['Whmsonic.add_module_row'] = 'Add Server';
